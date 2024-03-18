@@ -15,13 +15,17 @@ type Storage interface {
 
 func Login(s Storage, login, password string) (token uuid.UUID, err error) {
 	const op = "auth.Login"
+	//if logged in successfully generate token and send it to table
+	//return the token start counting lifetime
+
+	// if 5 failed logins block user
 
 	token = uuid.New()
 	hash, err := s.GetUserData(login)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("could not get user data: %s: %w", op, err)
 	}
-	err = VerifyPassword(password, hash)
+	err = verifyPassword(password, hash)
 	if err == argon2.ErrMismatchedHashAndPassword {
 		query := `
 			UPDATE users
@@ -39,7 +43,7 @@ func Login(s Storage, login, password string) (token uuid.UUID, err error) {
 }
 func RegisterNewUser(s Storage, login, password string) error {
 	const op = "auth.RegisterNewUser"
-	hash, err := HashPassword(password)
+	hash, err := hashPassword(password)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -50,7 +54,7 @@ func RegisterNewUser(s Storage, login, password string) error {
 	return nil
 }
 
-func VerifyPassword(password string, hash []byte) error {
+func verifyPassword(password string, hash []byte) error {
 	const op = "auth.VerifyPassword"
 	err := argon2.CompareHashAndPassword(hash, []byte(password))
 	if err == argon2.ErrMismatchedHashAndPassword {
@@ -61,7 +65,7 @@ func VerifyPassword(password string, hash []byte) error {
 	}
 	return nil
 }
-func HashPassword(password string) ([]byte, error) {
+func hashPassword(password string) ([]byte, error) {
 	const op = "auth.HashPassword"
 	key, err := argon2.GenerateFromPassword([]byte(password), argon2.DefaultParams)
 	if err != nil {
