@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"os"
+	"restapiauthtest/internal/auth"
 	"restapiauthtest/internal/config"
 	"restapiauthtest/internal/storage/postgresql"
 	"restapiauthtest/lib/logger/sl"
@@ -29,8 +30,21 @@ func main() {
 		log.Error("Could not init storage", sl.Err(err))
 		os.Exit(1)
 	}
-	_ = storage
+	// err = auth.RegisterNewUser(storage, "admin", "password")
+	// if err != nil {
+	// 	log.Error("Could not register new user", sl.Err(err))
+	// 	os.Exit(1)
+	// }
+	_, err = auth.Login(storage, "admin", "password")
+	if err != nil {
+		log.Error("Could not login", sl.Err(err))
+		os.Exit(1)
+	}
 
+	log.Info("Logged in")
+
+	// TODO: init logger
+	// TODO: init storage
 	// TODO: init server
 	// TODO: init handlers
 	// TODO: hash password & send to storage
