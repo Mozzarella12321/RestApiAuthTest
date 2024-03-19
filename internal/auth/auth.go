@@ -13,6 +13,7 @@ type Storage interface {
 	SaveNewUser(login string, hash []byte) error
 	GetUserData(login string) ([]byte, error)
 	ExecuteQuery(query string, args ...interface{}) error
+	CreateToken(token uuid.UUID) error
 }
 
 func Login(s Storage, login, password string) (token uuid.UUID, err error) {
@@ -21,8 +22,6 @@ func Login(s Storage, login, password string) (token uuid.UUID, err error) {
 	//return the token start counting lifetime
 
 	// if 5 failed logins block user
-
-	token = uuid.New()
 
 	hash, err := s.GetUserData(login)
 	if errors.Is(err, storage.ErrNotFound) {
@@ -53,7 +52,11 @@ func Login(s Storage, login, password string) (token uuid.UUID, err error) {
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("%s: %w", op, err)
 	}
-
+	token = uuid.New()
+	err = s.CreateToken(token)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("%s: %w", op, err)
+	}
 	resetUnsuccessfulLogins(s, login)
 
 	return token, nil

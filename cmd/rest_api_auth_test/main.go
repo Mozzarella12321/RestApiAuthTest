@@ -26,11 +26,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = auth.RegisterNewUser(storage, "me", "password")
-	if err != nil {
-		log.Error("Could not register new user", sl.Err(err))
-		os.Exit(1)
-	}
+	// err = auth.RegisterNewUser(storage, "me", "password")
+	// if err != nil {
+	// 	log.Error("Could not register new user", sl.Err(err))
+	// 	os.Exit(1)
+	// }
 
 	token, err := auth.Login(storage, "me", "password")
 	if err != nil {
@@ -38,7 +38,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("Logged in ", sl.Token(token))
+	log.Info("Logged in", sl.Token(token))
 
 	// TODO: init server
 	// TODO: init handlers

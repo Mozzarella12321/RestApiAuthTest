@@ -3,8 +3,16 @@ package postgresql
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path"
 	"restapiauthtest/internal/storage"
+	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
@@ -20,32 +28,78 @@ func New(storagePath string) (*Storage, error) {
 		return nil, fmt.Errorf("could not open storage: %s: %w", op, err)
 	}
 
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS users (
-		id SERIAL PRIMARY KEY,
-		login TEXT,
-		hash BYTEA,
-		unsuccessful_logins INT
-	);
-	`)
+	_, err = postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("could not create table users: %s: %w", op, err)
+		return nil, fmt.Errorf("could not get driver: %s: %w", op, err)
 	}
 
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS sessions (
-		id SERIAL PRIMARY KEY,
-		token INT,
-		lifetime INT
-	);
-	`)
+	migPath, err := getMigrationsPath()
 	if err != nil {
-		return nil, fmt.Errorf("could not create table sessions: %s: %w", op, err)
+		return nil, fmt.Errorf("could not get migrations path: %s: %w", op, err)
+	}
+
+	m, err := migrate.New("file://"+migPath, storagePath)
+	if err != nil {
+		return nil, fmt.Errorf("could not create migration instance: %s: %w", op, err)
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return nil, fmt.Errorf("error applying migrations: %s: %w", op, err)
 	}
 
 	return &Storage{db}, nil
 }
 
+// func New(storagePath string) (*Storage, error) {
+// 	const op = "postgresql.New"
+//
+// 	db, err := sql.Open("postgres", storagePath)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("could not open storage: %s: %w", op, err)
+// 	}
+//
+// 	_, err = db.Exec(`
+// 	CREATE TABLE IF NOT EXISTS users (
+// 		id SERIAL PRIMARY KEY,
+// 		login TEXT,
+// 		hash BYTEA,
+// 		unsuccessful_logins INT
+// 	);
+// 	`)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("could not create table users: %s: %w", op, err)
+// 	}
+//
+// 	_, err = db.Exec(`
+// 	CREATE TABLE IF NOT EXISTS sessions (
+// 		id SERIAL PRIMARY KEY,
+// 		token INT,
+// 		lifetime INT
+// 	);
+// 	`)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("could not create table sessions: %s: %w", op, err)
+// 	}
+//
+// 	return &Storage{db}, nil
+// }
+
+func (s *Storage) CreateToken(token uuid.UUID) error {
+	const op = "CreateToken"
+
+	currentTime := time.Now()
+
+	query := `
+    INSERT INTO sessions (token, created_at) VALUES ($1, $2)
+    `
+
+	_, err := s.db.Exec(query, token, currentTime)
+	if err != nil {
+		return fmt.Errorf("failed to create token: %s: %w", op, err)
+	}
+
+	return err
+}
 func (s *Storage) Close() error {
 	return s.db.Close()
 }
@@ -100,4 +154,16 @@ func (s *Storage) GetUserData(login string) ([]byte, error) {
 	}
 
 	return hash, nil
+}
+
+func getMigrationsPath() (string, error) {
+	const op = "postgresql.getMigrationsPath"
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("%s: could not get current working directory: %w", op, err)
+	}
+
+	migPath := path.Join(cwd, "..", "..", "..", "internal", "storage", "migrations")
+
+	return migPath, nil
 }
