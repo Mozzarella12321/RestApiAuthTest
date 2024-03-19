@@ -1,2 +1,0 @@
-env: "local"
-storage_path: "postgres://postgres:admin@localhost:5432/test?sslmode=disable"

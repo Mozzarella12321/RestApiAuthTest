@@ -2,11 +2,14 @@ package main
 
 import (
 	"log/slog"
+	"net/http"
 	"os"
 	"restapiauthtest/internal/auth"
 	"restapiauthtest/internal/config"
 	"restapiauthtest/internal/storage/postgresql"
 	"restapiauthtest/lib/logger/sl"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -39,6 +42,15 @@ func main() {
 	}
 
 	log.Info("Logged in", sl.Token(token))
+
+	r := chi.NewRouter()
+
+	// Определяем обработчик для корневого URL
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Привет, мир!"))
+	})
+
+	http.ListenAndServe(":8080", r)
 
 	// TODO: init server
 	// TODO: init handlers
