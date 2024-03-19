@@ -10,7 +10,6 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
@@ -122,7 +121,6 @@ func (s *Storage) SaveNewUser(login string, hash []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not check user existence: %s: %w", op, err)
 	}
-
 	if count > 0 {
 		return storage.ErrExists
 	}
