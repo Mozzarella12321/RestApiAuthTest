@@ -9,6 +9,11 @@ import (
 	"github.com/google/uuid"
 )
 
+// var (
+// 	ErrTooShortPassword = errors.New("password is too short")
+// 	ErrTooShortLogin    = errors.New("login is too short")
+// )
+
 type Storage interface {
 	SaveNewUser(login string, hash []byte) error
 	GetUserData(login string) ([]byte, error)
@@ -63,7 +68,12 @@ func Login(s Storage, login, password string) (token uuid.UUID, err error) {
 }
 func RegisterNewUser(s Storage, login, password string) error {
 	const op = "auth.RegisterNewUser"
-
+	// if len(password) < 8 {
+	// 	return ErrTooShortPassword
+	// }
+	// if len(login) < 4 {
+	// 	return ErrTooShortLogin
+	// }
 	hash, err := hashPassword(password)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)

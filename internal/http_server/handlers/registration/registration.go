@@ -21,8 +21,8 @@ type Storage interface {
 }
 
 type User struct {
-	Login    string `json:"login" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Login    string `json:"login" validate:"required,min=4"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 func Registration(log *slog.Logger, s Storage) http.HandlerFunc {

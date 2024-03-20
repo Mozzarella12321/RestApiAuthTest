@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"restapiauthtest/internal/config"
+	"restapiauthtest/internal/http_server/handlers/login"
 	"restapiauthtest/internal/http_server/handlers/registration"
 	"restapiauthtest/internal/storage/postgresql"
 	"restapiauthtest/lib/logger"
@@ -42,6 +43,7 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	router.Post("/registration", registration.Registration(log, storage))
+	router.Post("/login", login.Login(log, storage))
 
 	http.ListenAndServe(":8080", router)
 	//пост запрос на регистрацию
