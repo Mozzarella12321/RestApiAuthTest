@@ -7,4 +7,5 @@ var (
 	ErrExists        = errors.New("already exists")
 	ErrWrongPassword = errors.New("wrong password")
 	ErrBlocked       = errors.New("user is blocked")
+	ErrExpired       = errors.New("token expired")
 )

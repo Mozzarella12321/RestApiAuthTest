@@ -23,10 +23,6 @@ type Storage interface {
 
 func Login(s Storage, login, password string) (token uuid.UUID, err error) {
 	const op = "auth.Login"
-	//if logged in successfully generate token and send it to table
-	//return the token start counting lifetime
-
-	// if 5 failed logins block user
 
 	hash, err := s.GetUserData(login)
 	if errors.Is(err, storage.ErrNotFound) {

@@ -21,8 +21,12 @@ type LoginResponse struct {
 const (
 	StatusOK    = "OK"
 	StatusError = "ERROR"
+	pong        = "pong"
 )
 
+func Pong() string {
+	return pong
+}
 func LoggedInOK(token uuid.UUID) LoginResponse {
 	return LoginResponse{
 		Status: StatusOK,

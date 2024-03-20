@@ -154,6 +154,31 @@ func (s *Storage) GetUserData(login string) ([]byte, error) {
 	return hash, nil
 }
 
+func (s *Storage) GetToken(token uuid.UUID) error {
+	const op = "postgresql.GetToken"
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM sessions WHERE token = $1)"
+	err := s.db.QueryRow(query, token).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("%s: could not execute query: %v", op, err)
+	}
+
+	if !exists {
+		return storage.ErrNotFound
+	}
+
+	var created_At time.Time
+	err = s.db.QueryRow(`SELECT created_at FROM sessions WHERE token = $1`, token).Scan(&created_At)
+	if err != nil {
+		return err
+	}
+	// Check if the difference is less than one hour
+	if time.Since(created_At) > time.Hour {
+		return storage.ErrExpired
+	}
+	return nil
+}
+
 func getMigrationsPath() (string, error) {
 	const op = "postgresql.getMigrationsPath"
 	cwd, err := os.Getwd()
